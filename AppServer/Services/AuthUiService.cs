@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;   // <-- for NavigationManager
+using Microsoft.AspNetCore.Components;
 using AppServer.Models;
 
 namespace AppServer.Services;
@@ -15,7 +15,6 @@ public class AuthUiService
     public AuthUiService(IHttpClientFactory factory, NavigationManager nav)
     {
         _http = factory.CreateClient();
-        // Sæt base address til den kørende apps base-URL (virker i dev uden at hardcode porte)
         _http.BaseAddress = new Uri(nav.BaseUri);
     }
 
@@ -27,12 +26,16 @@ public class AuthUiService
         return (false, err);
     }
 
-    public async Task<(bool ok, string? code)> LoginAsync(LoginRequest req)
+    public async Task<(bool ok, string? code, string? userId)> LoginAsync(LoginRequest req)
     {
         var resp = await _http.PostAsJsonAsync("/api/auth/login", req);
-        if (resp.IsSuccessStatusCode) return (true, null);
+        if (resp.IsSuccessStatusCode)
+        {
+            var loginResponse = await resp.Content.ReadFromJsonAsync<LoginResponse>();
+            return (true, null, loginResponse?.UserId.ToString());
+        }
         var err = await TryReadError(resp);
-        return (false, err);
+        return (false, err, null);
     }
 
     private static async Task<string?> TryReadError(HttpResponseMessage resp)
