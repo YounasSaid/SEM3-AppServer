@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @using AppServer.Utils
-@inject IHttpContextAccessor HttpContextAccessor
+@using AppServer.Services
+@inject SimpleAuthService AuthService
 @inject NavigationManager Nav
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
@@ -13,12 +14,6 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
-                        <span class="bi bi-house-fill" aria-hidden="true"></span> Hjem
-                    </NavLink>
-                </li>
-                
                 @if (IsAuthenticated)
                 {
                     <li class="nav-item">
@@ -26,10 +21,16 @@
                             <span class="bi bi-folder-fill" aria-hidden="true"></span> Mine Quizzer
                         </NavLink>
                     </li>
-                    
+
                     <li class="nav-item">
-                        <NavLink class="nav-link" href="quiz/create">
-                            <span class="bi bi-plus-circle-fill" aria-hidden="true"></span> Opret Quiz
+                        <NavLink class="nav-link" href="quizzer">
+                            <span class="bi bi-play-circle-fill" aria-hidden="true"></span> Spil Quizzer
+                        </NavLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="leaderboard">
+                            <span class="bi bi-trophy-fill" aria-hidden="true"></span> Leaderboard
                         </NavLink>
                     </li>
                 }
@@ -38,6 +39,11 @@
             <ul class="navbar-nav">
                 @if (IsAuthenticated)
                 {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="profile">
+                            <span class="bi bi-person-circle" aria-hidden="true"></span> Min Profil
+                        </NavLink>
+                    </li>
                     <li class="nav-item">
                         <NavLink class="nav-link" href="logout">
                             <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Log ud
@@ -77,19 +83,9 @@
     {
         get
         {
-            try
-            {
-                var httpContext = HttpContextAccessor.HttpContext;
-                if (httpContext == null) return false;
-                
-                // Read from COOKIE (survives navigation)
-                var userId = httpContext.Request.Cookies[CookieKeys.UserId];
-                return !string.IsNullOrEmpty(userId);
-            }
-            catch
-            {
-                return false;
-            }
+            // Brug SimpleAuthService i stedet for HttpContext (som er null i SignalR context)
+            var userId = AuthService.GetUserId();
+            return !string.IsNullOrEmpty(userId);
         }
     }
 }
